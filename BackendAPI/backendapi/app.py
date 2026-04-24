@@ -1,16 +1,24 @@
 from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from backendapi.database import create_session
 from backendapi.models.user_models import User
+from backendapi.schemas.token_schemas import Token
 from backendapi.schemas.user_schemas import (
     UserList,
     UserSchema,
     UserSchemaPublic,
     UserUpdate,
+)
+from backendapi.security import (
+    creat_access_token,
+    get_current_user,
+    get_password_hash,
+    verify_password_hash,
 )
 
 app = FastAPI(title='API Sitema Bancário')
@@ -19,6 +27,29 @@ app = FastAPI(title='API Sitema Bancário')
 @app.get('/')
 def read_root():
     return {'msg': 'teste'}
+
+
+@app.post('/token/', response_model=Token)
+def get_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: Session = Depends(create_session),
+):
+    user_from_db = session.scalar(
+        select(User).where(User.email == form_data.username)
+    )
+    if not user_from_db:
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND, detail='Incorrect email or password'
+        )
+
+    if not verify_password_hash(form_data.password, user_from_db.password):
+        raise HTTPException(
+            HTTPStatus.NOT_FOUND, detail='Incorrect email or password'
+        )
+
+    access_token = creat_access_token(data={'sub': user_from_db.email})
+
+    return {'access_token': access_token, 'token_type': 'bearer'}
 
 
 @app.post(
@@ -35,7 +66,7 @@ def create_user(user: UserSchema, session: Session = Depends(create_session)):
 
     user_data = User(
         email=user.email,
-        password=user.password,
+        password=get_password_hash(user.password),
         cpf=user.cpf,
     )
     session.add(user_data)
@@ -58,29 +89,44 @@ def read_user(
     response_model=UserSchemaPublic,
 )
 def update_user(
-    user_id: int, user: UserUpdate, session: Session = Depends(create_session)
+    user_id: int,
+    user: UserUpdate,
+    session: Session = Depends(create_session),
+    current_user: User = Depends(get_current_user),
 ):
 
-    user_from_db = session.scalar(select(User).where(User.id == user_id))
+    if current_user.id != user_id:
+        raise HTTPException(
+            HTTPStatus.FORBIDDEN, detail='Not enough permissions'
+        )
 
-    if not user_from_db:
+    if not current_user:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='user not found'
         )
 
-    user_from_db.password = user.password
+    current_user.password = get_password_hash(user.password)
     session.commit()
-    session.refresh(user_from_db)
-    return user_from_db
+    session.refresh(current_user)
+    return current_user
 
 
 @app.delete('/user/{user_id}', status_code=HTTPStatus.OK)
-def delete_user(user_id: int, session: Session = Depends(create_session)):
-    user_from_db = session.scalar(select(User).where(User.id == user_id))
-    if not user_from_db:
+def delete_user(
+    user_id: int,
+    session: Session = Depends(create_session),
+    current_user: User = Depends(get_current_user),
+):
+
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=HTTPStatus.FORBIDDEN, detail='Not enough permissions'
+        )
+
+    if not current_user:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail='User not found')
 
-    session.delete(user_from_db)
+    session.delete(current_user)
     session.commit()
 
     return {'msg': 'user deleted'}

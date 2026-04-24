@@ -32,19 +32,20 @@ def test_read_user(client, user_test):
     }
 
 
-def test_update_user(client, user_test):
+def test_update_user(client, user_test, token):
     response = client.put(
         '/user/1',
+        headers={'Authorization': f'Bearer {token}'},
         json={
-            'email': 'super@gmail.com',
             'password': '12356',
-            'cpf': 123,
         },
     )
     assert response.status_code == HTTPStatus.OK
 
 
-def test_delete_user(client, user_test):
-    response = client.delete('/user/1')
+def test_delete_user(client, user_test, token):
+    response = client.delete(
+        '/user/1', headers={'Authorization': f'Bearer {token}'}
+    )
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {"msg": "user deleted"}
+    assert response.json() == {'msg': 'user deleted'}

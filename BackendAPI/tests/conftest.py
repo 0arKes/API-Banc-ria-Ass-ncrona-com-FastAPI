@@ -7,6 +7,7 @@ from sqlalchemy.pool import StaticPool
 from backendapi.app import app
 from backendapi.database import create_session
 from backendapi.models.user_models import User, table_registry
+from backendapi.security import get_password_hash
 
 
 @pytest.fixture
@@ -41,12 +42,27 @@ def session():
 
 @pytest.fixture
 def user_test(session):
+    password = 'test'
     fake_user = User(
         email='teste@test.com',
-        password='test',
+        password=get_password_hash(password),
         cpf=1234567890,
     )
     session.add(fake_user)
     session.commit()
     session.refresh(fake_user)
+
+    fake_user.clean_password = password
     return fake_user
+
+
+@pytest.fixture
+def token(client, user_test):
+    response = client.post(
+        '/token/',
+        data={
+            'username': user_test.email,
+            'password': user_test.clean_password,
+        },
+    )
+    return response.json()['access_token']
