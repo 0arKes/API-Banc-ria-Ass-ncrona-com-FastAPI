@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from backendapi.settings import Settings
-from backendapi.models.user_models import table_registry
+from backendapi.models.models import table_registry
 
 import asyncio
 

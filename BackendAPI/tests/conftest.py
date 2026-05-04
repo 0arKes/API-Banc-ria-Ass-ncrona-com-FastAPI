@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from backendapi.app import app
 from backendapi.database import create_session
-from backendapi.models.user_models import User, table_registry
+from backendapi.models.models import User, table_registry
 from backendapi.security import get_password_hash
 
 

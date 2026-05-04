@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backendapi.database import create_session
-from backendapi.models.user_models import User
+from backendapi.models.models import User
 from backendapi.schemas.user_schemas import (
     UserList,
     UserSchema,
