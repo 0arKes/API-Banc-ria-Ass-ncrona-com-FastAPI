@@ -19,7 +19,7 @@ class User:
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
-    cpf: Mapped[int] = mapped_column(unique=True)
+    cpf: Mapped[str] = mapped_column(unique=True)
     created_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now()
     )
