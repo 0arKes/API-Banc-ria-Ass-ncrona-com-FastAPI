@@ -25,7 +25,9 @@ jobs:
         run: pip install poetry
 
       - name: Instalar dependências
+        working-directory: ./BackendAPI
         run: poetry install
 
       - name: Executar testes
+        working-directory: ./BackendAPI
         run: poetry run pytest
