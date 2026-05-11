@@ -8,6 +8,7 @@ WORKDIR /app
 # instala poetry
 RUN pip install poetry
 
+RUN poetry config installer.max-workers 10
 # copia dependências
 COPY BackendAPI/pyproject.toml BackendAPI/poetry.lock* ./
 
