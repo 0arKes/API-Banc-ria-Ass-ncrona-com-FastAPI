@@ -7,7 +7,7 @@ def test_create_user(client):
         json={
             'email': 'alice@example.com',
             'password': 'secret',
-            'cpf': 1234567890,
+            'cpf': '1234567890',
         },
     )
     assert response.status_code == HTTPStatus.CREATED
@@ -19,7 +19,8 @@ def test_create_user(client):
 
 def test_post_user_exist(client, user_test):
     response = client.post(
-        '/user/', json={'email': user_test.email, 'password': '123', 'cpf': 5}
+        '/user/',
+        json={'email': user_test.email, 'password': '123', 'cpf': '5'},
     )
 
     assert response.status_code == HTTPStatus.CONFLICT

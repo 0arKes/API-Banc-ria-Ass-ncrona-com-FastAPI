@@ -72,4 +72,3 @@ def test_read_transactions(client, token, bank_account, transaction):
     )
 
     assert response.status_code == HTTPStatus.OK
-

@@ -46,7 +46,7 @@ async def user_test(session):
     fake_user = User(
         email='teste@test.com',
         password=get_password_hash(password),
-        cpf=1234567890,
+        cpf='1234567890',
     )
     session.add(fake_user)
     await session.commit()
