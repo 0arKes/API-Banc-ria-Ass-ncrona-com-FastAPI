@@ -425,6 +425,8 @@ Estratégia utilizada para otimizar carregamento de relacionamentos e reduzir pr
 
 ### 👤 Users — `/user`
 
+![tela de users no swagger](./.github/src/user.png)
+
 | Método | Endpoint | Descrição |
 |---|---|---|
 | `POST` | `/user/` | Cria um novo usuário |
@@ -513,6 +515,8 @@ A operação só pode ser realizada pelo próprio dono da conta.
 
 # 🔐 Token — `/token`
 
+![tela de token no swagger](./.github/src/token.png)
+
 | Método | Endpoint | Descrição |
 |---|---|---|
 | `POST` | `/token/` | Realiza autenticação e gera um JWT |
@@ -544,6 +548,8 @@ Valida email e senha e retorna um token JWT para acesso às rotas protegidas.
 ```
 
 # 🏦 Bank — `/bank`
+
+![tela de bank no swagger](./.github/src/bank.png)
 
 | Método | Endpoint | Descrição |
 |---|---|---|
@@ -599,6 +605,8 @@ Retorna o saldo atual e o histórico de transações da conta.
 ---
 
 # 💸 Transactions — `/transaction`
+
+![tela de transaction no swagger](./.github/src/transaction.png)
 
 | Método | Endpoint | Descrição |
 |---|---|---|
