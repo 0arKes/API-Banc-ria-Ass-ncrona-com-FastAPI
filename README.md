@@ -8,20 +8,22 @@ Esse é o meu resultado para o desafio do bootcamp **API Backend 2ª Edição - 
 - [🚀 Funcionalidades](#-funcionalidades)
 - [🛠 Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [🏗 Arquitetura](#-arquitetura)
-- [⚙️ Configuração do Ambiente](#️-configuração-do-ambiente)
+- [🎲 Banco de Dados](#-banco-de-dados)
 - [📡 Endpoints](#-endpoints)
-
+- [⚙️ Configuração do Ambiente](#️-configuração-do-ambiente)
 
 ## 📖 Sobre o Projeto
 
 O projeto simula operações bancárias básicas, permitindo:
 
 - Cadastro de usuários
+- Cadastro de contas bancárias
+- Controle de acesso por usuário
 - Autenticação com JWT
-- Criação de contas bancárias
 - Depósitos e saques
 - Consulta de extratos
-- Controle de acesso por usuário
+- Histórico de operações
+
 
 Escolhi o **PostgreSQL** como banco de dados principal (sqlite utilizado apenas no desenvolvimento e testes) pela sua maior confiabilidade, e desempenho.
 
@@ -29,13 +31,13 @@ Escolhi o **PostgreSQL** como banco de dados principal (sqlite utilizado apenas 
 
 ## 🚀 Funcionalidades
 
-A API foi estruturada em módulos independentes. Cada segmento possuiu um arquivo `.py` na pasta routers, confira a estrutura em [🏗 Arquitetura](#-arquitetura) e as rotas em [📡 Endpoints](#-endpoints)
+A API foi estruturada em módulos independentes. Cada segmento possui um arquivo `.py` na pasta routers, confira a estrutura em [🏗 Arquitetura](#-arquitetura) e as rotas em [📡 Endpoints](#-endpoints)
 
 ### 👤 Gerenciamento de Usuários
 
-Gerencia Usuarios da api
+Endpoint responsável por gerenciar Usuários da api
 
-[🚩Rota de Usuários](#-rota-usuários)
+[🚩Rota de Usuários](#-users--user)
 
 #### Funcionalidades
 
@@ -52,7 +54,7 @@ Gerencia Usuarios da api
 
 Controle de acesso utilizando autenticação baseada em JSON Web Token.
 
-[🚩Rotas de Autenticação](#-autenticação--token)
+[🚩Rotas de Autenticação](#-token--token)
 
 #### Funcionalidades
 
@@ -60,7 +62,7 @@ Controle de acesso utilizando autenticação baseada em JSON Web Token.
 - Proteção de rotas privadas aparecem com 🔒 no `/docs`
 - Controle de autorização por usuário -> validação para rotas que exigem autenticação
 - Tokens do tipo **Bearer**
-- Validação de credenciais. Mais em [security.py](#-securitypy)
+- Validação de credenciais. Confira em [security.py](#-securitypy)
 
 ---
 
@@ -68,15 +70,15 @@ Controle de acesso utilizando autenticação baseada em JSON Web Token.
 
 Módulo responsável pelo gerenciamento das contas bancárias.
 
-[🚩Rotas de Contas Bancárias](#-contas-bancárias)
+[🚩Rotas de Contas Bancárias](#-bank--bank)
 
 #### Funcionalidades
 
 - Criação de contas bancárias `POST` em `/bank`
-- Associação automática ao usuário autenticado -> parte lógica da view
+- Associação automática ao usuário autenticado -> lógica implementada na rota
 - Consulta de saldo e de extrato `GET` em `/bank{id}`
 
->Não há rotas de PUT, porque não há dados que o usuário pode modificar. E não há DELETE porque julguei que seria desnecessário. A maneira de deletar a conta bancária é excluindo o usuário, o que, por sua vez, exclui a conta bancária e seus dados relacionados, baseado na lógica _Cascade_.
+>Não há rotas de PUT, porque não há dados que o usuário pode modificar. E não há DELETE porque julguei que seria desnecessário. A maneira de deletar a conta bancária é excluindo o usuário, o que, por sua vez, exclui a conta bancária e seus dados relacionados, baseado na lógica _Cascade_ da tabela.
 
 ---
 
@@ -84,20 +86,20 @@ Módulo responsável pelo gerenciamento das contas bancárias.
 
 Guarda as transações como um histórico.
 
+[🚩Rotas de Transações Bancárias](#-transactions--transaction)
+
 #### Funcionalidades
 
-- Depósitos `POST` em `/transaction`
-- Saques `POST` em `/transaction`
-- Atualização automática de saldo. Logica da view
-- Validação de saldo insuficiente. Logica da view
-- Histórico de transações. Registra numa tabela própria no DB
-- Controle de acesso por proprietário da conta. 
+- Saques e Depósitos `POST` em `/transaction`
+- Atualização automática de saldo. -> Antes de ser registrada, a transação tenta atualizar o `balance` pertencente ao usuário que faz a requisição.
+- Validação de saldo insuficiente. -> Invalida caso o usuario tente tirar mais do que possui em `balance`
+- Histórico de transações. Registra numa tabela própria no Banco de Dados
 
 ---
 
 ### 📄 Paginação de Resultados
 
-Listagem otimizada utilizando parâmetros de paginação.
+Para a listagem otimizada utilizando parâmetros de paginação. Optei por usar um schema
 
 #### Funcionalidades
 
@@ -105,7 +107,7 @@ Listagem otimizada utilizando parâmetros de paginação.
 - `limit`
 - -> Controle de quantidade de registros retornados
 
-O controle vem atravez do `utility_schemas.py`
+O controle vem através do `utility_schemas.py`
 
 ```Python
 from pydantic import BaseModel, Field
@@ -131,56 +133,77 @@ Como desafio extra. Resolvi utilizar o Pytest para escrever testes simples da AP
 - Banco de dados isolado para testes
 - Testes assíncronos
 
----
-
 ## 🛠 Tecnologias Utilizadas
 
 ### ⚙️ Backend
 
-- Python 3.14
-- FastAPI
-- Pydantic Settings
-- SQLAlchemy Async
-- Alembic
-- PyJWT
-- pwdlib
-- Argon2
-- tzdata
+- **Python 3.14**
+- **FastAPI** — Escolhi pela simplicidade, performance e documentação automática da API.
+- **SQLAlchemy Async** — Para facilitar o desenvolvimento e a troca de banco de dados
+- **Alembic** — Para versionar e controlar migrações do banco de dados.
+- **PyJWT** — Utilizado na autenticação baseada em tokens JWT.
+- **pwdlib** — Para simplificar o gerenciamento e verificação de senhas.
+- **Argon2** — Escolhido por ser um algoritmo moderno e seguro para hash de senhas.
 
 ---
 
-### 🗄 Banco de Dados
+### 🗄 Sobre o Banco de Dados
 
-- PostgreSQL
-- asyncpg `drive`
+- **PostgreSQL**
+- **asyncpg** `driver` -> escolhido porque permite conexões assíncronas de alta performance com PostgreSQL
 
-- SQLite (desenvolvimento e testes apenas)
-- aiosqlite `drive`
+- **SQLite** (desenvolvimento e testes apenas)
+- **aiosqlite** `driver`
 
 ---
 
 ### 🧪 Testes Automatizados
 
-- Pytest
-- Pytest Asyncio
-- Pytest Cov
-- FastAPI TestClient
+- **Pytest** — Utilizado para garantir a qualidade e confiabilidade da aplicação através de testes automatizados.
 
 ---
 
 ### 🧹 Código
 
 - Ruff
+
+Configuração:
+```py
+[tool.ruff]
+line-length = 79 #PEP 8
+extend-exclude = ['migrations'] # não mexe nas migrations
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT', 'FAST'] # verificações
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single' # tipo de str
+```
+
 - Taskipy
+
+Configuração:
+```py
+[tool.taskipy.tasks] # comandos que podem ser encurtados com task
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'
+run = 'fastapi dev BackendAPI/app.py'
+pre_test = 'task lint'
+test = 'pytest -s -x --cov=BackendAPI -vv'
+post_test = 'coverage html'
+```
 
 ---
 
 ### 🐳 DevOps & Infraestrutura
 
-- Docker
-- Docker Compose
-- GitHub Actions
-- Render
+- **Docker**
+- **Docker Compose**
+- **GitHub Actions**
+- **Render** [🔗 Resultado final](https://api-bancaria-assincrona-com-fastapi.onrender.com)
 
 ---
 
@@ -206,22 +229,20 @@ Como desafio extra. Resolvi utilizar o Pytest para escrever testes simples da AP
 │   │   ├── app.py > Arquivo de start da aplicação
 │   │   ├── database.py > Responsável pela criação do engine assíncrono
 │   │   ├── security.py > Centraliza toda lógica de autenticação e segurança da aplicação.
-│   │   └── settings.py > Gerencia as variaveis de ambiente
+│   │   └── settings.py > Gerencia as variáveis de ambiente
 │   │
 │   ├── migrations/ > Diretório gerenciado pelo Alembic para versionamento do DB
 │   │   └── versions/
 │   │
 │   ├── tests/ > Contém toda estrutura de testes automatizados da aplicação
 │   │
-│   ├── pyproject.toml > Contem as bibliotecas utilizadas no projeto
+│   ├── pyproject.toml > Contém as bibliotecas utilizadas no projeto
 │   └── alembic.ini
 │
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
-
----
 
 ## 🧩 Organização dos Módulos
 
@@ -238,7 +259,7 @@ Cada arquivo representa um domínio específico da aplicação:
 
 ### 🗄 `models/`
 
-Aqui contem:
+Aqui contém:
 
 - Estrutura do DB
 - As Chaves estrangeiras
@@ -259,7 +280,7 @@ Os schemas controlam:
 
 ### 🔐 `security.py`
 
-Resposavel pela lógica de segurança
+Responsável pela lógica de segurança
 
 Inclui:
 
@@ -294,6 +315,354 @@ Inclui:
 - Testes assíncronos
 
 ---
+
+# 🎲 Banco de Dados
+
+Escolhi o SQLAlchemy como ORM para gerenciar a entrada e saída de dados da aplicação.
+
+# 📳 Modelagem
+
+```text
+User
+ └── BankAccount
+       └── Transaction
+```
+
+# 👥 Tabela: `users`
+
+Responsável pelo armazenamento dos usuários da plataforma.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `int` | Identificador do usuário [único, PK] |
+| `email` | `str` | Email utilizado para autenticação [único] |
+| `password` | `str` | Senha criptografada do usuário |
+| `cpf` | `str` | Documento de identificação [único] |
+| `created_at` | `datetime` | Data de criação do registro |
+
+
+### 🔴 OBS: `created_at`
+
+```python
+server_default = func.now()
+```
+
+A data é gerada automaticamente pelo banco de dados no momento da criação do registro.
+
+---
+
+# 🏦 Tabela: `bank_account`
+
+Representa as contas bancárias vinculadas aos usuários.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `account_id` | `int` | Identificador da conta [único, PK] |
+| `owner_id` | `int` | Referência ao proprietário da conta [FK de users.id]|
+| `balance` | `float` | Saldo atual da conta (mantido float apenas para uso didático)|
+
+---
+
+# 💸 Tabela: `transaction`
+
+Armazena todas as movimentações realizadas nas contas bancárias.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `int` | Identificador da transação [único, PK] |
+| `account_id` | `int` | Conta relacionada [FK de bank_account.account_id] |
+| `type_transaction` | `TransactionType` | Tipo da movimentação |
+| `amount` | `float` | Valor da operação |
+| `created_at` | `datetime` | Data da transação |
+
+### `type_transaction`
+
+```python
+class TransactionType(str, Enum):
+    deposit = 'deposit'
+    withdrawal = 'withdrawal'
+```
+
+Utilizei `Enum` para impedir valores inválidos da transação no banco.
+
+Tipos disponíveis:
+
+- `deposit`
+- `withdrawal`
+
+## 🔴 Cascade Delete
+
+```python
+cascade='all, delete-orphan'
+```
+
+Aplicado para manter integridade entre entidades relacionadas.
+
+### Comportamento
+
+- Remover um usuário remove suas contas
+- Remover uma conta remove suas transações
+
+
+## 🔴 Loading Strategy
+
+```python
+lazy='selectin'
+```
+
+Estratégia utilizada para otimizar carregamento de relacionamentos e reduzir problemas de N+1 queries.
+
+## No Geral a modelagem foi construída utilizando:
+
+- SQLAlchemy ORM
+- `mapped_as_dataclass`
+- Tipagem com `Mapped`
+- Relacionamentos bidirecionais com `relationship`
+
+# 📡 Endpoints
+
+>para uma melhor visualização visite a documentação no Swagger
+
+### 👤 Users — `/user`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/user/` | Cria um novo usuário |
+| `GET` | `/user/` | Lista os usuários cadastrados |
+| `PUT` | `/user/{user_id}` | Atualiza a senha do usuário |
+| `DELETE` | `/user/{user_id}` | Remove um usuário |
+
+
+## Exemplo:
+
+### 🔹 POST `/user/`
+
+Cria um novo usuário na plataforma os campos de email e CPF são únicos.  
+A senha enviada é protegida utilizando hash antes de ser salva no banco.
+
+### Exemplo de envio
+
+```json
+{
+  "email": "user@email.com",
+  "password": "123456",
+  "cpf": "12345678900"
+}
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "email": "user@email.com",
+  "id": 1
+}
+```
+
+## 🔹 GET `/user/`
+
+Retorna uma lista paginada de usuários cadastrados.
+
+### Query Params
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `offset` | int | Define o ponto inicial da busca |
+| `limit` | int | Quantidade máxima de registros |
+
+### Exemplo
+
+```http
+GET /user/?offset=0&limit=10
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "users": [
+    {
+      "email": "user@email.com",
+      "id": 1
+    }
+  ]
+}
+```
+
+## 🔹 PUT `/user/{user_id}`
+
+Atualiza a senha do usuário autenticado.  
+A operação só pode ser realizada pelo próprio dono da conta.
+
+### Exemplo de envio
+
+```json
+{
+  "password": "novasenha123"
+}
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "email": "user@email.com",
+  "id": 1
+}
+```
+
+# 🔐 Token — `/token`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/token/` | Realiza autenticação e gera um JWT |
+
+---
+
+## 🔹 POST `/token/`
+
+Responsável pelo login da aplicação.  
+Valida email e senha e retorna um token JWT para acesso às rotas protegidas.
+
+
+### Exemplo de envio
+
+```json
+{
+  "username": "user@email.com",
+  "password": "123456"
+}
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "access_token": "jwt-token",
+  "token_type": "bearer"
+}
+```
+
+# 🏦 Bank — `/bank`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/bank/` | Cria uma conta bancária |
+| `GET` | `/bank/{account_id}/` | Retorna o extrato da conta |
+
+---
+
+## 🔹 POST `/bank/`
+
+Cria uma nova conta bancária vinculada ao usuário autenticado.
+
+
+### Exemplo de envio
+
+```json
+{
+  "balance": 1000
+}
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "account_id": 1
+}
+```
+
+---
+
+## 🔹 GET `/bank/{account_id}/`
+
+Retorna o saldo atual e o histórico de transações da conta.
+
+
+### Exemplo de retorno
+
+```json
+{
+  "balance": 850,
+  "transactions": [
+    {
+      "account_id": 1,
+      "type_transaction": "deposit",
+      "amount": 1000,
+      "created_at": "2026-04-13T15:30:00"
+    }
+  ]
+}
+```
+
+---
+
+# 💸 Transactions — `/transaction`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/transaction/` | Realiza depósitos e saques |
+| `GET` | `/transaction/` | Lista transações registradas |
+
+## 🔹 POST `/transaction/`
+
+Cria uma movimentação financeira em uma conta bancária.  
+A rota suporta depósitos e saques, atualizando automaticamente o saldo da conta.
+
+
+### Exemplo de envio
+
+```json
+{
+  "account_id": 1,
+  "type_transaction": "deposit",
+  "amount": 500
+}
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "account_id": 1,
+  "type_transaction": "deposit",
+  "amount": 500,
+  "created_at": "2026-04-13T15:30:00"
+}
+```
+
+## 🔹 GET `/transaction/`
+
+Retorna uma lista paginada de transações registradas no sistema. **_Aqui é publico meramente por escolha didática_**
+
+### Query Params
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `offset` | int | Define o ponto inicial |
+| `limit` | int | Quantidade máxima de registros |
+
+### Exemplo
+
+```http
+GET /transaction/?offset=0&limit=10
+```
+
+### Exemplo de retorno
+
+```json
+{
+  "transactions": [
+    {
+      "account_id": 1,
+      "type_transaction": "withdrawal",
+      "amount": 100,
+      "created_at": "2026-04-13T15:30:00"
+    }
+  ]
+}
+```
 
 ## ⚙️ Configuração do Ambiente
 
@@ -370,8 +739,6 @@ A aplicação estará disponível em:
 http://127.0.0.1:8000
 ```
 
----
-
 ## 📚 Documentação Automática
 
 ### Swagger UI
@@ -386,8 +753,6 @@ http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/redoc
 ```
 
----
-
 ## 🧪 Executando os Testes
 
 Para executar os testes automatizados:
@@ -398,5 +763,10 @@ poetry run task test
 
 -> Execução através da contração do task ['pytest -s -x --cov=BackendAPI -vv']
 
----
+# Agradecimentos
 
+Alguns objetivos do desafio foram adaptados para tornar o projeto mais interessante sob a minha perspectiva.
+
+Agradeço ao professor [@guicarvalho](https://github.com/guicarvalho) pelas aulas e ao pessoal do Luizalabs pela oportunidade.
+
+Mais projetos no meu perfil: [@0arKes](https://github.com/0arKes)
